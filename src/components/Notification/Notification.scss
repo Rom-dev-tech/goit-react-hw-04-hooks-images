@@ -1,0 +1,13 @@
+@import 'styles/shared.scss';
+
+.notification__error {
+  text-align: center;
+  margin-top: 15rem;
+  font-size: 1.5rem;
+  color: $red;
+  font-style: italic;
+
+  @media screen and (min-width: $tablet) {
+    font-size: 3rem;
+  }
+}
