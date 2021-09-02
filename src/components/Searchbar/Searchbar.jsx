@@ -5,7 +5,6 @@ import '../Searchbar/Searchbar.scss';
 class Searchbar extends Component {
   static propTypes = {
     onSubmit: PropTypes.func.isRequired,
-    resetPage: PropTypes.func.isRequired,
     cleareImages: PropTypes.func.isRequired,
   };
   state = {
@@ -28,7 +27,6 @@ class Searchbar extends Component {
 
     this.props.onSubmit(this.state.searchQuery);
     this.setState({ searchQuery: '' });
-    this.props.resetPage();
   };
 
   render() {
