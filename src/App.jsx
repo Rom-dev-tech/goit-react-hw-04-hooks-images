@@ -1,35 +1,22 @@
-import React, { Component } from 'react';
+import { useState } from 'react';
 import Searchbar from './components/Searchbar';
 import ImagesView from './components/ImagesView';
 import './App.scss';
 
-class App extends Component {
-  state = {
-    searchQuery: null,
-    togglePage: false,
-  };
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState(null);
+  const [togglePage, setTogglePage] = useState(false);
 
-  getSearchQuerry = (searchQuery, clearPage) =>
-    this.setState({ searchQuery: searchQuery, clearPage: clearPage });
+  const getSearchQuerry = (searchQuery) => setSearchQuery(searchQuery);
 
-  cleareImages = () => {
-    this.setState(({ togglePage }) => ({
-      togglePage: !togglePage,
-    }));
-  };
+  const cleareImages = () => setTogglePage(!togglePage);
 
-  render() {
-    const { searchQuery, togglePage } = this.state;
-    return (
-      <div className="app">
-        <Searchbar
-          onSubmit={this.getSearchQuerry}
-          cleareImages={this.cleareImages}
-        />
-        <ImagesView searchQuery={searchQuery} toggleClearPage={togglePage} />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="app">
+      <Searchbar onSubmit={getSearchQuerry} cleareImages={cleareImages} />
+      <ImagesView searchQuery={searchQuery} toggleClearPage={togglePage} />
+    </div>
+  );
+};
 
 export default App;

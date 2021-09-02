@@ -1,4 +1,5 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import ImageGallery from '../ImageGallery';
 import imageAPI from '../../services/images-api';
 import Button from '../Button';
@@ -14,176 +15,136 @@ const Status = {
   REJECTED: 'rejected',
 };
 
-//Props - searchQuery = // = toggleClearPage
+const ImagesView = ({ searchQuery, toggleClearPage }) => {
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState('');
+  const [modalImageAlt, setModalImageAlt] = useState('');
+  const [error, setError] = useState(null);
+  const [status, setStatus] = useState(Status.IDLE);
+  const [isClickButtonLoadMore, setIsClickButtonLoadMore] = useState(false);
 
-class ImagesView extends Component {
-  state = {
-    page: 1,
-    images: [],
-    showModal: false,
-    modalImage: '',
-    modalImageAlt: '',
-    error: null,
-    status: Status.IDLE,
-    isClickButtonLoadMore: false,
-  };
-
-  scroll() {
+  const scroll = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
       behavior: 'smooth',
     });
-  }
-
-  pageIncrement = () =>
-    this.setState((prevState) => ({ page: prevState.page + 1 }));
-
-  closeModal = () => {
-    this.toggleModal();
-
-    this.setState(({ modalImage }) => ({
-      modalImage: '',
-      modalImageAlt: '',
-    }));
   };
 
-  toggleModal = () =>
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
+  const pageIncrement = () => setPage((state) => state + 1);
 
-  openModal = (url, alt) => {
-    this.toggleModal();
+  const toggleModal = () => setShowModal(!showModal);
 
-    this.setState(({ modalImage }) => ({
-      modalImage: url,
-      modalImageAlt: alt,
-    }));
+  const closeModal = () => {
+    toggleModal();
+    setModalImage('');
+    setModalImageAlt('');
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const prevSearchQuerry = prevProps.searchQuery;
-    const nextSearchQuerry = this.props.searchQuery;
-    const prevToggleClearStartPage = prevProps.toggleClearPage;
-    const nextToggleClearStartPage = this.props.toggleClearPage;
-    const prevPage = prevState.page;
-    const nextpage = this.state.page;
-    const prevImages = prevState.images;
-    const prevmodalImage = prevState.modalImage;
-    const nextmodalImage = this.state.modalImage;
-    const prevShowModal = prevState.showModal;
-    const nextshowModal = this.state.showModal;
+  const openModal = (url, alt) => {
+    toggleModal();
+    setModalImage(url);
+    setModalImageAlt(alt);
+  };
 
-    if (prevToggleClearStartPage !== nextToggleClearStartPage) {
-      this.setState({ status: Status.IDLE });
-    }
+  useEffect(() => {
+    setStatus(Status.IDLE);
+  }, [toggleClearPage]);
 
-    if (prevmodalImage !== nextmodalImage) {
+  useEffect(() => {
+    if (searchQuery === null) {
       return;
     }
 
-    if (prevSearchQuerry !== nextSearchQuerry) {
-      this.setState({
-        status: Status.PENDING,
-        page: 1,
-        isClickButtonLoadMore: false,
+    setStatus(Status.PENDING);
+    setPage(1);
+    setIsClickButtonLoadMore(false);
+
+    if (searchQuery === '') {
+      setTimeout(() => {
+        setError({ message: 'Ops, empty. Please enter something...' });
+        setStatus(Status.REJECTED);
+      }, 500);
+      return;
+    }
+
+    imageAPI(searchQuery, 1)
+      .then((images) => {
+        setImages(images);
+        setStatus(Status.RESOLVED);
+      })
+      .catch((error) => {
+        setError(error);
+        setStatus(Status.REJECTED);
       });
+  }, [searchQuery]);
 
-      if (nextSearchQuerry === '') {
-        setTimeout(() => {
-          this.setState({
-            error: {
-              message: 'Ops, empty. Please enter something...',
-            },
-            status: Status.REJECTED,
-          });
-        }, 500);
-        return;
-      }
-
-      imageAPI(nextSearchQuerry, 1)
-        .then((images) => this.setState({ images, status: Status.RESOLVED }))
-        .catch((error) => this.setState({ error, status: Status.REJECTED }));
-    }
-
-    if (nextpage === 1) {
+  useEffect(() => {
+    if (page === 1) {
       return;
     }
 
-    if (prevPage !== nextpage) {
-      this.setState({ status: Status.PENDING, isClickButtonLoadMore: true });
+    setStatus(Status.PENDING);
+    setIsClickButtonLoadMore(true);
 
-      imageAPI(prevSearchQuerry, nextpage)
-        .then((images) => {
-          this.setState({
-            images: [...prevImages, ...images],
-            status: Status.RESOLVED,
-          });
-        })
-        .catch((error) =>
-          this.setState({
-            images: [],
-            error: {
-              message: 'Sorry, no more pictures ...',
-              status: Status.REJECTED,
-            },
-          })
-        );
-    }
+    imageAPI(searchQuery, page)
+      .then((images) => {
+        setImages((state) => [...state, ...images]);
+        setStatus(Status.RESOLVED);
+        scroll();
+      })
+      .catch((error) => {
+        setImages([]);
+        setError({ message: 'Sorry, no more pictures ...' });
+        setStatus(Status.REJECTED);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]); //!
 
-    if (!prevShowModal && !nextshowModal) {
-      this.scroll();
-    }
+  if (status === 'idle') {
+    return <AboutAppInfo />;
   }
 
-  render() {
-    const {
-      images,
-      showModal,
-      modalImage,
-      modalImageAlt,
-      error,
-      status,
-      isClickButtonLoadMore,
-    } = this.state;
-
-    if (status === 'idle') {
-      return <AboutAppInfo />;
-    }
-
-    if (status === 'pending') {
-      return (
-        <>
-          {isClickButtonLoadMore && (
-            <ImageGallery images={images} openModal={this.openModal} />
-          )}
-          <Loading />
-        </>
-      );
-    }
-
-    if (status === 'rejected') {
-      return (
-        <>
-          <Notification message={error.message} />
-        </>
-      );
-    }
-
-    if (status === 'resolved') {
-      return (
-        <>
-          <ImageGallery images={images} openModal={this.openModal} />
-          {images.length >= 12 ? <Button page={this.pageIncrement} /> : null}
-          {showModal && (
-            <Modal
-              closeModal={this.closeModal}
-              modalImage={modalImage}
-              modalImageAlt={modalImageAlt}
-            />
-          )}
-        </>
-      );
-    }
+  if (status === 'pending') {
+    return (
+      <>
+        {isClickButtonLoadMore && (
+          <ImageGallery images={images} openModal={openModal} />
+        )}
+        <Loading />
+      </>
+    );
   }
-}
+
+  if (status === 'rejected') {
+    return (
+      <>
+        <Notification message={error.message} />
+      </>
+    );
+  }
+
+  if (status === 'resolved') {
+    return (
+      <>
+        <ImageGallery images={images} openModal={openModal} />
+        {images.length >= 12 ? <Button page={pageIncrement} /> : null}
+        {showModal && (
+          <Modal
+            closeModal={closeModal}
+            modalImage={modalImage}
+            modalImageAlt={modalImageAlt}
+          />
+        )}
+      </>
+    );
+  }
+};
+
+ImagesView.propTypes = {
+  searchQuery: PropTypes.string,
+  toggleClearPage: PropTypes.bool.isRequired,
+};
 
 export default ImagesView;
