@@ -11,11 +11,13 @@ export const SearchProvider = ({ children }) => {
   const [page, setPage] = useState(1);
   const [isClickButtonLoadMore, setIsClickButtonLoadMore] = useState(false);
   const [togglePage, setTogglePage] = useState(false);
+  const [images, setImages] = useState([]);
 
   const onChangeQuery = (searchQuery) => {
     setSearchQuery(searchQuery);
     setPage(1);
     setIsClickButtonLoadMore(false);
+    setImages([]);
   };
 
   const pageIncrement = () => {
@@ -32,6 +34,8 @@ export const SearchProvider = ({ children }) => {
         page,
         isClickButtonLoadMore,
         togglePage,
+        images,
+        setImages,
         onChangeQuery,
         pageIncrement,
         cleareImages,

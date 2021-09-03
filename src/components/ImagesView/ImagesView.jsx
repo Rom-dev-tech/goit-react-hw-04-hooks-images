@@ -16,7 +16,6 @@ const Status = {
 };
 
 const ImagesView = () => {
-  const [images, setImages] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalImage, setModalImage] = useState('');
   const [modalImageAlt, setModalImageAlt] = useState('');
@@ -28,6 +27,8 @@ const ImagesView = () => {
     pageIncrement,
     isClickButtonLoadMore,
     togglePage,
+    images,
+    setImages,
   } = useSearch();
 
   useEffect(() => {
@@ -39,8 +40,6 @@ const ImagesView = () => {
       return;
     }
 
-    setStatus(Status.PENDING);
-
     if (searchQuery === '') {
       setTimeout(() => {
         setError({ message: 'Ops, empty. Please enter something...' });
@@ -49,36 +48,23 @@ const ImagesView = () => {
       return;
     }
 
-    imageAPI(searchQuery, 1)
-      .then((images) => {
-        setImages(images);
-        setStatus(Status.RESOLVED);
-      })
-      .catch((error) => {
-        setError(error);
-        setStatus(Status.REJECTED);
-      });
-  }, [searchQuery]);
+    const fetchImages = () => {
+      setStatus(Status.PENDING);
 
-  useEffect(() => {
-    if (page === 1) {
-      return;
-    }
+      imageAPI(searchQuery, page)
+        .then((images) => {
+          setImages((state) => [...state, ...images]);
+          setStatus(Status.RESOLVED);
+          scroll();
+        })
+        .catch((error) => {
+          setError({ message: 'Sorry, no more pictures ...' });
+          setStatus(Status.REJECTED);
+        });
+    };
 
-    setStatus(Status.PENDING);
-
-    imageAPI(searchQuery, page)
-      .then((images) => {
-        setImages((state) => [...state, ...images]);
-        setStatus(Status.RESOLVED);
-        scroll();
-      })
-      .catch((error) => {
-        setError({ message: 'Sorry, no more pictures ...' });
-        setStatus(Status.REJECTED);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]); //!
+    fetchImages();
+  }, [page, searchQuery, setImages]);
 
   const scroll = () => {
     window.scrollTo({
