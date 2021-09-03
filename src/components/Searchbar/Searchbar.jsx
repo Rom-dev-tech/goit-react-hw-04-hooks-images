@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useSearch } from './SearchContext';
 import '../Searchbar/Searchbar.scss';
 
@@ -51,4 +51,4 @@ const Searchbar = () => {
   );
 };
 
-export default Searchbar;
+export default memo(Searchbar);

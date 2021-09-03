@@ -22,7 +22,6 @@ const ImagesView = () => {
   const [modalImageAlt, setModalImageAlt] = useState('');
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(Status.IDLE);
-
   const {
     searchQuery,
     page,
@@ -30,27 +29,6 @@ const ImagesView = () => {
     isClickButtonLoadMore,
     togglePage,
   } = useSearch();
-
-  const scroll = () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
-
-  const toggleModal = () => setShowModal(!showModal);
-
-  const closeModal = () => {
-    toggleModal();
-    setModalImage('');
-    setModalImageAlt('');
-  };
-
-  const openModal = (url, alt) => {
-    toggleModal();
-    setModalImage(url);
-    setModalImageAlt(alt);
-  };
 
   useEffect(() => {
     setStatus(Status.IDLE);
@@ -101,6 +79,27 @@ const ImagesView = () => {
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]); //!
+
+  const scroll = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
+  };
+
+  const toggleModal = () => setShowModal(!showModal);
+
+  const closeModal = () => {
+    toggleModal();
+    setModalImage('');
+    setModalImageAlt('');
+  };
+
+  const openModal = (url, alt) => {
+    toggleModal();
+    setModalImage(url);
+    setModalImageAlt(alt);
+  };
 
   if (status === 'idle') {
     return <AboutAppInfo />;
