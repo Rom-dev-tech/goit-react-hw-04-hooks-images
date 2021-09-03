@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+import { memo, useEffect, useState } from 'react';
 import ImageGallery from '../ImageGallery';
 import imageAPI from '../../services/images-api';
 import Button from '../Button';
@@ -7,6 +6,7 @@ import Loading from '../Loader';
 import Modal from '../Modal';
 import Notification from '../Notification';
 import AboutAppInfo from '../AboutAppInfo';
+import { useSearch } from '../Searchbar/SearchContext';
 
 const Status = {
   IDLE: 'idle',
@@ -15,15 +15,21 @@ const Status = {
   REJECTED: 'rejected',
 };
 
-const ImagesView = ({ searchQuery, toggleClearPage }) => {
-  const [page, setPage] = useState(1);
+const ImagesView = () => {
   const [images, setImages] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalImage, setModalImage] = useState('');
   const [modalImageAlt, setModalImageAlt] = useState('');
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(Status.IDLE);
-  const [isClickButtonLoadMore, setIsClickButtonLoadMore] = useState(false);
+
+  const {
+    searchQuery,
+    page,
+    pageIncrement,
+    isClickButtonLoadMore,
+    togglePage,
+  } = useSearch();
 
   const scroll = () => {
     window.scrollTo({
@@ -31,8 +37,6 @@ const ImagesView = ({ searchQuery, toggleClearPage }) => {
       behavior: 'smooth',
     });
   };
-
-  const pageIncrement = () => setPage((state) => state + 1);
 
   const toggleModal = () => setShowModal(!showModal);
 
@@ -50,7 +54,7 @@ const ImagesView = ({ searchQuery, toggleClearPage }) => {
 
   useEffect(() => {
     setStatus(Status.IDLE);
-  }, [toggleClearPage]);
+  }, [togglePage]);
 
   useEffect(() => {
     if (searchQuery === null) {
@@ -58,8 +62,6 @@ const ImagesView = ({ searchQuery, toggleClearPage }) => {
     }
 
     setStatus(Status.PENDING);
-    setPage(1);
-    setIsClickButtonLoadMore(false);
 
     if (searchQuery === '') {
       setTimeout(() => {
@@ -86,7 +88,6 @@ const ImagesView = ({ searchQuery, toggleClearPage }) => {
     }
 
     setStatus(Status.PENDING);
-    setIsClickButtonLoadMore(true);
 
     imageAPI(searchQuery, page)
       .then((images) => {
@@ -95,7 +96,6 @@ const ImagesView = ({ searchQuery, toggleClearPage }) => {
         scroll();
       })
       .catch((error) => {
-        setImages([]);
         setError({ message: 'Sorry, no more pictures ...' });
         setStatus(Status.REJECTED);
       });
@@ -142,9 +142,4 @@ const ImagesView = ({ searchQuery, toggleClearPage }) => {
   }
 };
 
-ImagesView.propTypes = {
-  searchQuery: PropTypes.string,
-  toggleClearPage: PropTypes.bool.isRequired,
-};
-
-export default ImagesView;
+export default memo(ImagesView);

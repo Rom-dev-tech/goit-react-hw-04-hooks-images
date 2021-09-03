@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useSearch } from './SearchContext';
 import '../Searchbar/Searchbar.scss';
 
-const Searchbar = ({ onSubmit, cleareImages }) => {
+const Searchbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
+
+  const { onChangeQuery, cleareImages } = useSearch();
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.currentTarget.value.toLowerCase());
@@ -13,11 +15,11 @@ const Searchbar = ({ onSubmit, cleareImages }) => {
     event.preventDefault();
 
     if (searchQuery.trim() === '') {
-      onSubmit(searchQuery.trim());
+      onChangeQuery(searchQuery.trim());
       return;
     }
 
-    onSubmit(searchQuery);
+    onChangeQuery(searchQuery);
     setSearchQuery('');
   };
 
@@ -47,11 +49,6 @@ const Searchbar = ({ onSubmit, cleareImages }) => {
       ></button>
     </header>
   );
-};
-
-Searchbar.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-  cleareImages: PropTypes.func.isRequired,
 };
 
 export default Searchbar;
